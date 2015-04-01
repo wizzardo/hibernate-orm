@@ -59,6 +59,7 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.StringBuilderCache;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -90,7 +91,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	        final String rootEntityName,
 	        final String rootSQLAlias,
 	        CriteriaQuery outerQuery) throws HibernateException {
-		this( factory, criteria, rootEntityName, rootSQLAlias );
+		this(factory, criteria, rootEntityName, rootSQLAlias);
 		outerQueryTranslator = outerQuery;
 	}
 
@@ -353,8 +354,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	public String getSelect() {
 		return rootCriteria.getProjection().toSqlString(
 				rootCriteria.getProjectionCriteria(),
-		        0,
-		        this
+				0,
+				this
 		);
 	}
 
@@ -373,7 +374,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public String getWhereCondition() {
-		StringBuffer condition = new StringBuffer( 30 );
+		StringBuilder condition = StringBuilderCache.get();
+		try{
 		Iterator criterionIterator = rootCriteria.iterateExpressionEntries();
 		while ( criterionIterator.hasNext() ) {
 			CriteriaImpl.CriterionEntry entry = ( CriteriaImpl.CriterionEntry ) criterionIterator.next();
@@ -383,11 +385,14 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				condition.append( " and " );
 			}
 		}
-		return condition.toString();
+		return condition.toString();}finally {
+			StringBuilderCache.release(condition);
+		}
 	}
 
 	public String getOrderBy() {
-		StringBuffer orderBy = new StringBuffer( 30 );
+		StringBuilder orderBy = StringBuilderCache.get();
+		try{
 		Iterator criterionIterator = rootCriteria.iterateOrderings();
 		while ( criterionIterator.hasNext() ) {
 			CriteriaImpl.OrderEntry oe = ( CriteriaImpl.OrderEntry ) criterionIterator.next();
@@ -397,6 +402,9 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			}
 		}
 		return orderBy.toString();
+		}finally {
+		StringBuilderCache.release(orderBy);
+	}
 	}
 
 	public SessionFactoryImplementor getFactory() {

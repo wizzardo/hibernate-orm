@@ -24,32 +24,7 @@
  */
 package org.hibernate.impl;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.NonUniqueResultException;
-import org.hibernate.PropertyNotFoundException;
-import org.hibernate.Query;
-import org.hibernate.QueryException;
-import org.hibernate.LockOptions;
+import org.hibernate.*;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionImplementor;
@@ -61,10 +36,12 @@ import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.MarkerObject;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.util.*;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.*;
 
 /**
  * Abstract implementation of the Query interface.
@@ -180,7 +157,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setTimeout(int timeout) {
-		selection.setTimeout( new Integer(timeout) );
+		selection.setTimeout(new Integer(timeout));
 		return this;
 	}
 	public Query setFetchSize(int fetchSize) {
@@ -189,7 +166,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Type[] getReturnTypes() throws HibernateException {
-		return session.getFactory().getReturnTypes( queryString );
+		return session.getFactory().getReturnTypes(queryString);
 	}
 
 	public String[] getReturnAliases() throws HibernateException {
@@ -393,7 +370,7 @@ public abstract class AbstractQueryImpl implements Query {
 				types.add( UNSET_TYPE );
 			}
 			values.add( val );
-			types.add( type );
+			types.add(type);
 		}
 		return this;
 	}
@@ -403,7 +380,7 @@ public abstract class AbstractQueryImpl implements Query {
 			throw new IllegalArgumentException("Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]");
 		}
 		else {
-			 namedParameters.put( name, new TypedValue( type, val, session.getEntityMode() ) );
+			 namedParameters.put(name, new TypedValue(type, val, session.getEntityMode()));
 			 return this;
 		}
 	}
@@ -413,7 +390,7 @@ public abstract class AbstractQueryImpl implements Query {
 			setParameter( position, val, Hibernate.SERIALIZABLE );
 		}
 		else {
-			setParameter( position, val, determineType( position, val ) );
+			setParameter(position, val, determineType(position, val));
 		}
 		return this;
 	}
@@ -433,7 +410,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	protected Type determineType(int paramPosition, Object paramValue, Type defaultType) {
-		Type type = parameterMetadata.getOrdinalParameterExpectedType( paramPosition + 1 );
+		Type type = parameterMetadata.getOrdinalParameterExpectedType(paramPosition + 1);
 		if ( type == null ) {
 			type = defaultType;
 		}
@@ -441,7 +418,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	protected Type determineType(int paramPosition, Object paramValue) throws HibernateException {
-		Type type = parameterMetadata.getOrdinalParameterExpectedType( paramPosition + 1 );
+		Type type = parameterMetadata.getOrdinalParameterExpectedType(paramPosition + 1);
 		if ( type == null ) {
 			type = guessType( paramValue );
 		}
@@ -449,7 +426,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	protected Type determineType(String paramName, Object paramValue, Type defaultType) {
-		Type type = parameterMetadata.getNamedParameterExpectedType( paramName );
+		Type type = parameterMetadata.getNamedParameterExpectedType(paramName);
 		if ( type == null ) {
 			type = defaultType;
 		}
@@ -457,7 +434,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	protected Type determineType(String paramName, Object paramValue) throws HibernateException {
-		Type type = parameterMetadata.getNamedParameterExpectedType( paramName );
+		Type type = parameterMetadata.getNamedParameterExpectedType(paramName);
 		if ( type == null ) {
 			type = guessType( paramValue );
 		}
@@ -465,7 +442,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	protected Type determineType(String paramName, Class clazz) throws HibernateException {
-		Type type = parameterMetadata.getNamedParameterExpectedType( paramName );
+		Type type = parameterMetadata.getNamedParameterExpectedType(paramName);
 		if ( type == null ) {
 			type = guessType( clazz );
 		}
@@ -473,7 +450,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	private Type guessType(Object param) throws HibernateException {
-		Class clazz = HibernateProxyHelper.getClassWithoutInitializingProxy( param );
+		Class clazz = HibernateProxyHelper.getClassWithoutInitializingProxy(param);
 		return guessType( clazz );
 	}
 
@@ -725,7 +702,7 @@ public abstract class AbstractQueryImpl implements Query {
 		if ( !parameterMetadata.getNamedParameterNames().contains( name ) ) {
 			throw new IllegalArgumentException("Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]");
 		}
-		namedParameterLists.put( name, new TypedValue( type, vals, session.getEntityMode() ) );
+		namedParameterLists.put(name, new TypedValue(type, vals, session.getEntityMode()));
 		return this;
 	}
 	
@@ -733,21 +710,49 @@ public abstract class AbstractQueryImpl implements Query {
 	 * Warning: adds new parameters to the argument by side-effect, as well as
 	 * mutating the query string!
 	 */
-	protected String expandParameterLists(Map namedParamsCopy) {
+	protected String expandParameterListsOld(Map namedParamsCopy) {
 		String query = this.queryString;
 		Iterator iter = namedParameterLists.entrySet().iterator();
 		while ( iter.hasNext() ) {
 			Map.Entry me = (Map.Entry) iter.next();
-			query = expandParameterList( query, (String) me.getKey(), (TypedValue) me.getValue(), namedParamsCopy );
+			query = expandParameterListOld( query, (String) me.getKey(), (TypedValue) me.getValue(), namedParamsCopy );
 		}
 		return query;
+	}
+
+	protected String expandParameterLists(Map namedParamsCopy) {
+		return expandParameterListsNew(namedParamsCopy);
 	}
 
 	/**
 	 * Warning: adds new parameters to the argument by side-effect, as well as
 	 * mutating the query string!
 	 */
-	private String expandParameterList(String query, String name, TypedValue typedList, Map namedParamsCopy) {
+	protected String expandParameterListsNew(Map namedParamsCopy) {
+		if(this.queryString == null)
+			return null;
+
+//		System.out.println("query: "+queryString+"; params: "+namedParamsCopy);
+
+		StringBuilder query = StringBuilderCache.get();
+		try{
+			query.append(queryString);
+			Iterator iter = namedParameterLists.entrySet().iterator();
+			while ( iter.hasNext() ) {
+				Map.Entry me = (Map.Entry) iter.next();
+				expandParameterList( query, (String) me.getKey(), (TypedValue) me.getValue(), namedParamsCopy );
+			}
+			return query.toString();
+		}finally {
+			StringBuilderCache.release(query);
+		}
+	}
+
+	/**
+	 * Warning: adds new parameters to the argument by side-effect, as well as
+	 * mutating the query string!
+	 */
+	private String expandParameterListOld(String query, String name, TypedValue typedList, Map namedParamsCopy) {
 		Collection vals = (Collection) typedList.getValue();
 		Type type = typedList.getType();
 
@@ -802,6 +807,68 @@ public abstract class AbstractQueryImpl implements Query {
 				true,
 				true
 		);
+	}
+
+	private void expandParameterList(StringBuilder query, String name, TypedValue typedList, Map namedParamsCopy) {
+		Collection vals = (Collection) typedList.getValue();
+		Type type = typedList.getType();
+
+		boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor( name ).isJpaStyle();
+		String paramPrefix = isJpaPositionalParam ? "?" : ParserHelper.HQL_VARIABLE_PREFIX;
+		String placeholder = paramPrefix + name;
+
+		if ( query == null ) {
+			return;
+		}
+		int loc = query.indexOf( placeholder );
+
+		if ( loc < 0 ) {
+			return;
+		}
+
+		String beforePlaceholder = query.substring( 0, loc );
+		String afterPlaceholder =  query.substring( loc + placeholder.length() );
+
+		// check if placeholder is already immediately enclosed in parentheses
+		// (ignoring whitespace)
+		boolean isEnclosedInParens =
+				StringHelper.getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' &&
+						StringHelper.getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')';
+
+		if ( vals.size() == 1  && isEnclosedInParens ) {
+			// short-circuit for performance when only 1 value and the
+			// placeholder is already enclosed in parentheses...
+			namedParamsCopy.put( name, new TypedValue( type, vals.iterator().next(), session.getEntityMode() ) );
+			return;
+		}
+
+		StringBuilder list = StringBuilderCache.get();
+		try {
+			Iterator iter = vals.iterator();
+			int i = 0;
+			while ( iter.hasNext() ) {
+				String alias = ( isJpaPositionalParam ? 'x' + name : name ) + i++ + '_';
+				namedParamsCopy.put( alias, new TypedValue( type, iter.next(), session.getEntityMode() ) );
+				list.append( ParserHelper.HQL_VARIABLE_PREFIX ).append( alias );
+				if ( iter.hasNext() ) {
+					list.append( ", " );
+				}
+			}
+
+			query.setLength(0);
+
+			StringHelper.replace(
+					beforePlaceholder,
+					afterPlaceholder,
+					placeholder,
+					list,
+					true,
+					true,
+					query
+			);
+		} finally {
+			StringBuilderCache.release(list);
+		}
 	}
 
 	public Query setParameterList(String name, Collection vals) throws HibernateException {

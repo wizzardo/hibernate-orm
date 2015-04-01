@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.util.StringBuilderCache;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -133,7 +134,8 @@ public class SelectFragment {
 	}	
 	
 	public String toFragmentString() {
-		StringBuffer buf = new StringBuffer( columns.size() * 10 );
+		StringBuilder buf = StringBuilderCache.get();
+		try {
 		Iterator iter = columns.iterator();
 		Iterator columnAliasIter = columnAliases.iterator();
 		//HashMap columnsUnique = new HashMap();
@@ -164,6 +166,9 @@ public class SelectFragment {
 				.append(extraSelectList);
 		}
 		return buf.toString();
+	}finally {
+		StringBuilderCache.release(buf);
+	}
 	}
 
 }

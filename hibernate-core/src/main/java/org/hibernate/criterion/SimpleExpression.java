@@ -67,7 +67,7 @@ public class SimpleExpression implements Criterion {
 
 		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		Type type = criteriaQuery.getTypeUsingProjection(criteria, propertyName);
-		StringBuffer fragment = new StringBuffer();
+		StringBuilder fragment = new StringBuilder();
 		if (columns.length>1) fragment.append('(');
 		SessionFactoryImplementor factory = criteriaQuery.getFactory();
 		int[] sqlTypes = type.sqlTypes( factory );
