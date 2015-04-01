@@ -379,8 +379,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		Iterator criterionIterator = rootCriteria.iterateExpressionEntries();
 		while ( criterionIterator.hasNext() ) {
 			CriteriaImpl.CriterionEntry entry = ( CriteriaImpl.CriterionEntry ) criterionIterator.next();
-			String sqlString = entry.getCriterion().toSqlString( entry.getCriteria(), this );
-			condition.append( sqlString );
+			entry.getCriterion().toSqlString(entry.getCriteria(), this, condition);
 			if ( criterionIterator.hasNext() ) {
 				condition.append( " and " );
 			}
@@ -396,7 +395,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		Iterator criterionIterator = rootCriteria.iterateOrderings();
 		while ( criterionIterator.hasNext() ) {
 			CriteriaImpl.OrderEntry oe = ( CriteriaImpl.OrderEntry ) criterionIterator.next();
-			orderBy.append( oe.getOrder().toSqlString( oe.getCriteria(), this ) );
+			oe.getOrder().toSqlString( oe.getCriteria(), this, orderBy);
 			if ( criterionIterator.hasNext() ) {
 				orderBy.append( ", " );
 			}

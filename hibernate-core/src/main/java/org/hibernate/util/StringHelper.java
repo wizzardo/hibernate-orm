@@ -65,6 +65,15 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
+	public static void join(String seperator, String[] strings, StringBuilder buf) {
+		int length = strings.length;
+		if ( length == 0 ) return;
+		buf.append(strings[0]);
+		for ( int i = 1; i < length; i++ ) {
+			buf.append( seperator ).append( strings[i] );
+		}
+	}
+
 	public static String join(String seperator, Iterator objects) {
 		StringBuilder buf = new StringBuilder();
 		if ( objects.hasNext() ) buf.append( objects.next() );
@@ -83,9 +92,14 @@ public final class StringHelper {
 	}
 
 	public static String repeat(String string, int times) {
-		StringBuilder buf = new StringBuilder( string.length() * times );
-		for ( int i = 0; i < times; i++ ) buf.append( string );
+		StringBuilder buf = new StringBuilder(string.length() * times);
+		repeat(string, times, buf);
 		return buf.toString();
+	}
+
+	public static void repeat(String string, int times, StringBuilder buf) {
+		for ( int i = 0; i < times; i++ )
+			buf.append( string );
 	}
 
 	public static String repeat(char character, int times) {
@@ -255,13 +269,13 @@ public final class StringHelper {
 			buf.append( ')' );
 		}
 		buf.append(
-			replace(
-					afterPlaceholder,
-					placeholder,
-					replacement,
-					wholeWords,
-					encloseInParensIfNecessary
-			)
+				replace(
+						afterPlaceholder,
+						placeholder,
+						replacement,
+						wholeWords,
+						encloseInParensIfNecessary
+				)
 		);
 	}
 

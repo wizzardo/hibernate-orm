@@ -31,6 +31,7 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
+import org.hibernate.util.StringBuilderCache;
 
 /**
  * Represents an order imposed upon a <tt>Criteria</tt> result set
@@ -59,15 +60,21 @@ public class Order implements Serializable {
 		this.ascending = ascending;
 	}
 
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
 	/**
 	 * Render the SQL fragment
 	 *
 	 */
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) 
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder fragment)
 	throws HibernateException {
 		String[] columns = criteriaQuery.getColumnsUsingProjection(criteria, propertyName);
 		Type type = criteriaQuery.getTypeUsingProjection(criteria, propertyName);
-		StringBuilder fragment = new StringBuilder();
 		for ( int i=0; i<columns.length; i++ ) {
 			SessionFactoryImplementor factory = criteriaQuery.getFactory();
 			boolean lower = ignoreCase && type.sqlTypes( factory )[i]==Types.VARCHAR;
@@ -80,7 +87,6 @@ public class Order implements Serializable {
 			fragment.append( ascending ? " asc" : " desc" );
 			if ( i<columns.length-1 ) fragment.append(", ");
 		}
-		return fragment.toString();
 	}
 
 	/**

@@ -52,27 +52,36 @@ public abstract class AbstractEmptinessExpression implements Criterion {
 		this.propertyName = propertyName;
 	}
 
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
 	protected abstract boolean excludeEmpty();
 
-	public final String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		String entityName = criteriaQuery.getEntityName( criteria, propertyName );
-		String actualPropertyName = criteriaQuery.getPropertyName( propertyName );
-		String sqlAlias = criteriaQuery.getSQLAlias( criteria, propertyName );
+	public final void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder sb) throws HibernateException {
+		String entityName = criteriaQuery.getEntityName(criteria, propertyName);
+		String actualPropertyName = criteriaQuery.getPropertyName(propertyName);
+		String sqlAlias = criteriaQuery.getSQLAlias(criteria, propertyName);
 
 		SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		QueryableCollection collectionPersister = getQueryableCollection( entityName, actualPropertyName, factory );
+		QueryableCollection collectionPersister = getQueryableCollection(entityName, actualPropertyName, factory);
 
 		String[] collectionKeys = collectionPersister.getKeyColumnNames();
 		String[] ownerKeys = ( ( Loadable ) factory.getEntityPersister( entityName ) ).getIdentifierColumnNames();
 
-		String innerSelect = "(select 1 from " + collectionPersister.getTableName()
-		        + " where "
-		        + new ConditionFragment().setTableAlias( sqlAlias ).setCondition( ownerKeys, collectionKeys ).toFragmentString()
-		        + ")";
+		if (excludeEmpty())
+			sb.append("exists ");
+		else
+			sb.append("not exists ");
 
-		return excludeEmpty()
-		        ? "exists " + innerSelect
-		        : "not exists " + innerSelect;
+		sb.append("(select 1 from ")
+				.append(collectionPersister.getTableName())
+				.append(" where ");
+		new ConditionFragment().setTableAlias(sqlAlias).setCondition(ownerKeys, collectionKeys).toFragmentString(sb);
+		sb.append(")");
 	}
 
 

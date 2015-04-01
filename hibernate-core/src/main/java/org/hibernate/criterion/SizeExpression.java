@@ -53,6 +53,13 @@ public class SizeExpression implements Criterion {
 	}
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder sb)
 	throws HibernateException {
 		String role = criteriaQuery.getEntityName(criteria, propertyName) + 
 				'.' +  
@@ -62,17 +69,16 @@ public class SizeExpression implements Criterion {
 		//String[] fk = StringHelper.qualify( "collection_", cp.getKeyColumnNames() );
 		String[] fk = cp.getKeyColumnNames();
 		String[] pk = ( (Loadable) cp.getOwnerEntityPersister() ).getIdentifierColumnNames(); //TODO: handle property-ref
-		return "? " + 
-				op + 
-				" (select count(*) from " +
-				cp.getTableName() +
-				//" collection_ where " +
-				" where " +
-				new ConditionFragment()
+		sb.append("? ")
+				.append(op)
+				.append(" (select count(*) from ")
+				.append(cp.getTableName())
+				.append(" where ")
+				.append(new ConditionFragment()
 						.setTableAlias( criteriaQuery.getSQLAlias(criteria, propertyName) )
 						.setCondition(pk, fk)
-						.toFragmentString() +
-				")";
+						.toFragmentString())
+				.append(")");
 	}
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) 

@@ -40,11 +40,16 @@ public class SQLCriterion implements Criterion {
 	private final String sql;
 	private final TypedValue[] typedValues;
 
-	public String toSqlString(
-		Criteria criteria,
-		CriteriaQuery criteriaQuery)
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString( Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder builder)
 	throws HibernateException {
-		return StringHelper.replace( sql, "{alias}", criteriaQuery.getSQLAlias(criteria) );
+		builder.append(StringHelper.replace( sql, "{alias}", criteriaQuery.getSQLAlias(criteria) ));
 	}
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery)

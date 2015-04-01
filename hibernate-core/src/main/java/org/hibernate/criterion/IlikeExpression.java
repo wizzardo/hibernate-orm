@@ -50,15 +50,22 @@ public class IlikeExpression implements Criterion {
 	}
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder builder)
 	throws HibernateException {
 		Dialect dialect = criteriaQuery.getFactory().getDialect();
 		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		if (columns.length!=1) throw new HibernateException("ilike may only be used with single-column properties");
 		if ( dialect instanceof PostgreSQLDialect ) {
-			return columns[0] + " ilike ?";
+			builder.append(columns[0]).append(" ilike ?");
 		}
 		else {
-			return dialect.getLowercaseFunction() + '(' + columns[0] + ") like ?";
+			builder.append(dialect.getLowercaseFunction()).append('(').append(columns[0]).append(") like ?");
 		}
 
 		//TODO: get SQL rendering out of this package!

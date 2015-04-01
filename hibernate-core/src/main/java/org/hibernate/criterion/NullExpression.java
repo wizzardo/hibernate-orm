@@ -44,15 +44,26 @@ public class NullExpression implements Criterion {
 		this.propertyName = propertyName;
 	}
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder builder)
+			throws HibernateException {
 		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
-		String result = StringHelper.join(
-			" and ",
-			StringHelper.suffix( columns, " is null" )
+		if (columns.length > 1)
+			builder.append('(');
+
+		StringHelper.join(
+				" and ",
+				StringHelper.suffix(columns, " is null"),
+				builder
 		);
-		if (columns.length>1) result = '(' + result + ')';
-		return result;
+		if (columns.length > 1)
+			builder.append(')');
 
 		//TODO: get SQL rendering out of this package!
 	}

@@ -43,16 +43,28 @@ public class IdentifierEqExpression implements Criterion {
 	}
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder builder)
+			throws HibernateException {
 
 		String[] columns = criteriaQuery.getIdentifierColumns(criteria);
+		if (columns.length > 1)
+			builder.append('(');
 
-		String result = StringHelper.join(
-			" and ",
-			StringHelper.suffix( columns, " = ?" )
+		StringHelper.join(
+				" and ",
+				StringHelper.suffix(columns, " = ?"),
+				builder
 		);
-		if (columns.length>1) result = '(' + result + ')';
-		return result;
+
+		if (columns.length > 1)
+			builder.append(')');
 
 		//TODO: get SQL rendering out of this package!
 	}

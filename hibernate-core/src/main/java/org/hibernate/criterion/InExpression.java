@@ -23,8 +23,6 @@
  */
 package org.hibernate.criterion;
 
-import java.util.ArrayList;
-
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -32,6 +30,8 @@ import org.hibernate.engine.TypedValue;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+
+import java.util.ArrayList;
 
 /**
  * Constrains the property to a specified list of values
@@ -47,7 +47,14 @@ public class InExpression implements Criterion {
 		this.values = values;
 	}
 
-    public String toSqlString( Criteria criteria, CriteriaQuery criteriaQuery )
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+    public void toSqlString( Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder builder)
             throws HibernateException {
         String[] columns = criteriaQuery.findColumns(propertyName, criteria);
         if ( criteriaQuery.getFactory().getDialect()
@@ -58,20 +65,27 @@ public class InExpression implements Criterion {
                     + "?";
             if ( columns.length > 1 )
                 singleValueParam = '(' + singleValueParam + ')';
-            String params = values.length > 0 ? StringHelper.repeat(
-                    singleValueParam + ", ", values.length - 1 )
-                    + singleValueParam : "";
-            String cols = StringHelper.join( ", ", columns );
-            if ( columns.length > 1 )
-                cols = '(' + cols + ')';
-            return cols + " in (" + params + ')';
-        } else {
+
+			if ( columns.length > 1 ){
+				builder.append('(');
+				StringHelper.join(", ", columns, builder);
+				builder.append(')');
+			}
+			builder.append(" in (");
+			if (values.length > 0) {
+				StringHelper.repeat(singleValueParam + ", ", values.length - 1, builder);
+				builder.append(singleValueParam);
+			}
+			builder.append(')');
+		} else {
            String cols = " ( " + StringHelper.join( " = ? and ", columns ) + "= ? ) ";
-             cols = values.length > 0 ? StringHelper.repeat( cols
-                    + "or ", values.length - 1 )
-                    + cols : "";
-            cols = " ( " + cols + " ) ";
-            return cols;
+			builder.append(" ( ");
+			if(values.length>0){
+				StringHelper.repeat(cols + "or ", values.length - 1, builder);
+				builder.append(cols);
+			}
+			builder.append(" ) ");
+
         }
     }
 

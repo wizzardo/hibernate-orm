@@ -39,8 +39,16 @@ public class NaturalIdentifier implements Criterion {
 		return conjunction.getTypedValues(criteria, criteriaQuery);
 	}
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		return conjunction.toSqlString(criteria, criteriaQuery);
+
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder builder) throws HibernateException {
+		conjunction.toSqlString(criteria, criteriaQuery, builder);
 	}
 	
 	public NaturalIdentifier set(String property, Object value) {

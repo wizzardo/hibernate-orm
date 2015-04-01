@@ -45,14 +45,22 @@ public class NotNullExpression implements Criterion {
 	}
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder sb)
 	throws HibernateException {
 		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
-		String result = StringHelper.join(
+		if (columns.length>1) sb.append('(');
+		StringHelper.join(
 			" or ",
-			StringHelper.suffix( columns, " is not null" )
+			StringHelper.suffix( columns, " is not null" ),
+			sb
 		);
-		if (columns.length>1) result = '(' + result + ')';
-		return result;
+		if (columns.length>1) sb.append(')');
 
 		//TODO: get SQL rendering out of this package!
 	}

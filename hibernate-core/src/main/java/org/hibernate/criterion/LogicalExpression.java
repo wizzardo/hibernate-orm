@@ -39,6 +39,13 @@ public class LogicalExpression implements Criterion {
 	private final Criterion rhs;
 	private final String op;
 
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
 	protected LogicalExpression(Criterion lhs, Criterion rhs, String op) {
 		this.lhs = lhs;
 		this.rhs = rhs;
@@ -56,16 +63,15 @@ public class LogicalExpression implements Criterion {
 		return result;
 	}
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
-
-		return '(' +
-			lhs.toSqlString(criteria, criteriaQuery) +
-			' ' +
-			getOp() +
-			' ' +
-			rhs.toSqlString(criteria, criteriaQuery) +
-			')';
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder builder)
+			throws HibernateException {
+		builder.append('(');
+		lhs.toSqlString(criteria, criteriaQuery, builder);
+		builder.append(' ')
+				.append(getOp())
+				.append(' ');
+		rhs.toSqlString(criteria, criteriaQuery, builder);
+		builder.append(')');
 	}
 
 	public String getOp() {

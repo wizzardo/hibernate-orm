@@ -47,10 +47,19 @@ public class BetweenExpression implements Criterion {
 	}
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder builder)
 	throws HibernateException {
-		return StringHelper.join(
+		StringHelper.join(
 			" and ",
-			StringHelper.suffix( criteriaQuery.findColumns(propertyName, criteria), " between ? and ?" )
+			StringHelper.suffix( criteriaQuery.findColumns(propertyName, criteria), " between ? and ?" ),
+			builder
 		);
 
 		//TODO: get SQL rendering out of this package!

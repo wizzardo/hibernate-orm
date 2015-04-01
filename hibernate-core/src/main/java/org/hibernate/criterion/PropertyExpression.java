@@ -47,16 +47,26 @@ public class PropertyExpression implements Criterion {
 		this.op = op;
 	}
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) 
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder sb)
 	throws HibernateException {
 		String[] xcols = criteriaQuery.findColumns(propertyName, criteria);
 		String[] ycols = criteriaQuery.findColumns(otherPropertyName, criteria);
-		String result = StringHelper.join(
+		if (xcols.length>1)
+			sb.append('(');
+		StringHelper.join(
 			" and ",
-			StringHelper.add(xcols, getOp(), ycols)
+			StringHelper.add(xcols, getOp(), ycols),
+			sb
 		);
-		if (xcols.length>1) result = '(' + result + ')';
-		return result;
+		if (xcols.length>1)
+			sb.append(')');
 		//TODO: get SQL rendering out of this package!
 	}
 

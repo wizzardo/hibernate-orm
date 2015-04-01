@@ -43,12 +43,22 @@ public class NotExpression implements Criterion {
 	}
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder sb)
 	throws HibernateException {
 		if ( criteriaQuery.getFactory().getDialect() instanceof MySQLDialect ) {
-			return "not (" + criterion.toSqlString(criteria, criteriaQuery) + ')';
+			sb.append("not (");
+			criterion.toSqlString(criteria, criteriaQuery, sb);
+			sb.append(')');
 		}
 		else {
-			return "not " + criterion.toSqlString(criteria, criteriaQuery);
+			sb.append("not ");
+			criterion.toSqlString(criteria, criteriaQuery, sb);
 		}
 	}
 

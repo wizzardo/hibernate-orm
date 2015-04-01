@@ -53,7 +53,9 @@ public interface Criterion extends Serializable {
 	 * @throws org.hibernate.HibernateException Problem during rendering.
 	 */
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException;
-	
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder sb) throws HibernateException;
+
 	/**
 	 * Return typed values for all parameters in the rendered SQL fragment
 	 *

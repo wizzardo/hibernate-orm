@@ -62,6 +62,12 @@ public abstract class SubqueryExpression implements Criterion {
 	protected abstract String toLeftSqlString(Criteria criteria, CriteriaQuery outerQuery);
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder buf) throws HibernateException {
 		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
 		final OuterJoinLoadable persister =
 				( OuterJoinLoadable ) factory.getEntityPersister( criteriaImpl.getEntityOrClassName() );
@@ -81,15 +87,14 @@ public abstract class SubqueryExpression implements Criterion {
 
 		String sql = walker.getSQLString();
 
-		final StringBuffer buf = new StringBuffer( toLeftSqlString(criteria, criteriaQuery) );
+		buf.append(toLeftSqlString(criteria, criteriaQuery));
 		if ( op != null ) {
 			buf.append( ' ' ).append( op ).append( ' ' );
 		}
 		if ( quantifier != null ) {
 			buf.append( quantifier ).append( ' ' );
 		}
-		return buf.append( '(' ).append( sql ).append( ')' )
-				.toString();
+		buf.append('(').append( sql ).append(')');
 	}
 
 	private SessionImplementor deriveRootSession(Criteria criteria) {

@@ -25,13 +25,13 @@
 package org.hibernate.criterion;
 
 
-import java.sql.Types;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.type.Type;
+
+import java.sql.Types;
 
 /**
  * superclass for "simple" comparisons (with SQL binary operators)
@@ -63,11 +63,15 @@ public class SimpleExpression implements Criterion {
 	}
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
 
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder fragment) throws HibernateException {
 		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		Type type = criteriaQuery.getTypeUsingProjection(criteria, propertyName);
-		StringBuilder fragment = new StringBuilder();
 		if (columns.length>1) fragment.append('(');
 		SessionFactoryImplementor factory = criteriaQuery.getFactory();
 		int[] sqlTypes = type.sqlTypes( factory );
@@ -84,8 +88,6 @@ public class SimpleExpression implements Criterion {
 			if ( i<columns.length-1 ) fragment.append(" and ");
 		}
 		if (columns.length>1) fragment.append(')');
-		return fragment.toString();
-
 	}
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery)

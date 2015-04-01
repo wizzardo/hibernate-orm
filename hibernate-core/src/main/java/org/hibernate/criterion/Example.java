@@ -197,10 +197,10 @@ public class Example implements Criterion {
 			selector.include(value, name, type);
 	}
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+	public void toSqlString(Criteria criteria, CriteriaQuery criteriaQuery, StringBuilder buf)
 		throws HibernateException {
 
-		StringBuffer buf = new StringBuffer().append('(');
+		buf.append('(');
 		EntityPersister meta = criteriaQuery.getFactory().getEntityPersister( criteriaQuery.getEntityName(criteria) );
 		String[] propertyNames = meta.getPropertyNames();
 		Type[] propertyTypes = meta.getPropertyTypes();
@@ -235,8 +235,16 @@ public class Example implements Criterion {
 			}
 		}
 		if ( buf.length()==1 ) buf.append("1=1"); //yuck!
-		return buf.append(')').toString();
+		buf.append(')');
 	}
+
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
 
 	private static final Object[] TYPED_VALUES = new TypedValue[0];
 
@@ -326,7 +334,7 @@ public class Example implements Criterion {
 		Object propertyValue,
 		Criteria criteria,
 		CriteriaQuery cq,
-		StringBuffer buf)
+		StringBuilder buf)
 	throws HibernateException {
 		Criterion crit;
 		if ( propertyValue!=null ) {
@@ -358,7 +366,7 @@ public class Example implements Criterion {
 		CompositeType type,
 		Criteria criteria,
 		CriteriaQuery criteriaQuery,
-		StringBuffer buf)
+		StringBuilder buf)
 	throws HibernateException {
 
 		if (component!=null) {

@@ -74,19 +74,27 @@ public class LikeExpression implements Criterion {
 		this( propertyName, matchMode.toMatchString( value ), escapeChar, ignoreCase );
 	}
 
-	public String toSqlString(
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
+
+	public void toSqlString(
 			Criteria criteria,
-			CriteriaQuery criteriaQuery) throws HibernateException {
+			CriteriaQuery criteriaQuery, StringBuilder builder) throws HibernateException {
 		Dialect dialect = criteriaQuery.getFactory().getDialect();
 		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		if ( columns.length != 1 ) {
 			throw new HibernateException( "Like may only be used with single-column properties" );
 		}
-		String lhs = ignoreCase
-				? dialect.getLowercaseFunction() + '(' + columns[0] + ')'
-	            : columns[0];
-		return lhs + " like ?" + ( escapeChar == null ? "" : " escape \'" + escapeChar + "\'" );
-
+		if (ignoreCase)
+			builder.append(dialect.getLowercaseFunction()).append('(').append(columns[0]).append(')');
+		else
+			builder.append(columns[0]);
+		builder.append(" like ?")
+				.append(escapeChar == null ? "" : " escape \'" + escapeChar + "\'");
 	}
 
 	public TypedValue[] getTypedValues(

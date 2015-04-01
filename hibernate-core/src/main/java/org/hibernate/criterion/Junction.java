@@ -24,14 +24,14 @@
  */
 package org.hibernate.criterion;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.util.StringHelper;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * A sequence of a logical expressions combined by some
@@ -41,7 +41,7 @@ import org.hibernate.util.StringHelper;
  */
 public class Junction implements Criterion {
 
-	private final List criteria = new ArrayList();
+	private final List<Criterion> criteria = new ArrayList<Criterion>();
 	private final String op;
 	
 	protected Junction(String op) {
@@ -60,9 +60,9 @@ public class Junction implements Criterion {
 	public TypedValue[] getTypedValues(Criteria crit, CriteriaQuery criteriaQuery)
 	throws HibernateException {
 		ArrayList typedValues = new ArrayList();
-		Iterator iter = criteria.iterator();
+		Iterator<Criterion> iter = criteria.iterator();
 		while ( iter.hasNext() ) {
-			TypedValue[] subvalues = ( (Criterion) iter.next() ).getTypedValues(crit, criteriaQuery);
+			TypedValue[] subvalues = iter.next().getTypedValues(crit, criteriaQuery);
 			for ( int i=0; i<subvalues.length; i++ ) {
 				typedValues.add( subvalues[i] );
 			}
@@ -70,19 +70,27 @@ public class Junction implements Criterion {
 		return (TypedValue[]) typedValues.toArray( new TypedValue[ typedValues.size() ] );
 	}
 
-	public String toSqlString(Criteria crit, CriteriaQuery criteriaQuery)
-	throws HibernateException {
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
+			throws HibernateException {
+		StringBuilder sb = new StringBuilder();
+		toSqlString(criteria, criteriaQuery, sb);
+		return sb.toString();
+	}
 
-		if ( criteria.size()==0 ) return "1=1";
-
-		StringBuffer buffer = new StringBuffer()
-			.append('(');
-		Iterator iter = criteria.iterator();
-		while ( iter.hasNext() ) {
-			buffer.append( ( (Criterion) iter.next() ).toSqlString(crit, criteriaQuery) );
-			if ( iter.hasNext() ) buffer.append(' ').append(op).append(' ');
+	public void toSqlString(Criteria crit, CriteriaQuery criteriaQuery, StringBuilder buffer)
+			throws HibernateException {
+		if (criteria.size() == 0) {
+			buffer.append("1=1");
+			return;
 		}
-		return buffer.append(')').toString();
+
+		buffer.append('(');
+		Iterator<Criterion> iter = criteria.iterator();
+		while (iter.hasNext()) {
+			iter.next().toSqlString(crit, criteriaQuery, buffer);
+			if (iter.hasNext()) buffer.append(' ').append(op).append(' ');
+		}
+		buffer.append(')');
 	}
 
 	/**
