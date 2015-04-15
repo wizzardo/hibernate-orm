@@ -66,11 +66,14 @@ public class InExpression implements Criterion {
             if ( columns.length > 1 )
                 singleValueParam = '(' + singleValueParam + ')';
 
-			if ( columns.length > 1 ){
+			if (columns.length > 1)
 				builder.append('(');
-				StringHelper.join(", ", columns, builder);
+
+			StringHelper.join(", ", columns, builder);
+
+			if (columns.length > 1)
 				builder.append(')');
-			}
+
 			builder.append(" in (");
 			if (values.length > 0) {
 				StringHelper.repeat(singleValueParam + ", ", values.length - 1, builder);
