@@ -38,7 +38,7 @@ public final class StringHelper {
 
 	private StringHelper() { /* static methods only - hide constructor */
 	}
-	
+
 	/*public static boolean containsDigits(String string) {
 		for ( int i=0; i<string.length(); i++ ) {
 			if ( Character.isDigit( string.charAt(i) ) ) return true;
@@ -172,13 +172,33 @@ public final class StringHelper {
 		if ( template == null ) {
 			return;
 		}
-		int loc = template.indexOf( placeholder );
+		int loc = template.indexOf(placeholder);
 		if ( loc < 0 ) {
 			return;
 		}
 		else {
 			String beforePlaceholder = template.substring( 0, loc );
 			String afterPlaceholder = template.substring( loc + placeholder.length() );
+			replace( beforePlaceholder, afterPlaceholder, placeholder, replacement, wholeWords, encloseInParensIfNecessary, sb);
+		}
+	}
+
+	public static void replace(CustomCharSequence template,
+							   CustomCharSequence placeholder,
+								 StringBuilder replacement,
+								 boolean wholeWords,
+								 boolean encloseInParensIfNecessary,
+							     StringBuilder sb) {
+		if ( template == null ) {
+			return;
+		}
+		int loc = template.indexOf(placeholder);
+		if ( loc < 0 ) {
+            sb.append(template);
+            return;
+        } else {
+			CustomCharSequence beforePlaceholder = template.substring( 0, loc );
+			CustomCharSequence afterPlaceholder = template.substring( loc + placeholder.length() );
 			replace( beforePlaceholder, afterPlaceholder, placeholder, replacement, wholeWords, encloseInParensIfNecessary, sb);
 		}
 	}
@@ -268,18 +288,68 @@ public final class StringHelper {
 		if ( encloseInParens ) {
 			buf.append( ')' );
 		}
-		buf.append(
-				replace(
-						afterPlaceholder,
-						placeholder,
-						replacement,
-						wholeWords,
-						encloseInParensIfNecessary
-				)
-		);
+		StringBuilder buf2 = StringBuilderCache.get();
+		try {
+			replace(
+					afterPlaceholder,
+					placeholder,
+					replacement,
+					wholeWords,
+					encloseInParensIfNecessary,
+					buf2
+			);
+			buf.append(buf2);
+		} finally {
+			StringBuilderCache.release(buf2);
+		}
 	}
 
-	public static char getLastNonWhitespaceCharacter(String str) {
+	public static void replace(CustomCharSequence beforePlaceholder,
+							   CustomCharSequence afterPlaceholder,
+							   CustomCharSequence placeholder,
+								 StringBuilder replacement,
+								 boolean wholeWords,
+								 boolean encloseInParensIfNecessary,
+								 StringBuilder buf) {
+		final boolean actuallyReplace =
+				! wholeWords ||
+				afterPlaceholder.length() == 0 ||
+				! Character.isJavaIdentifierPart( afterPlaceholder.charAt( 0 ) );
+		boolean encloseInParens =
+				actuallyReplace &&
+				encloseInParensIfNecessary &&
+				! ( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' ) &&
+				! ( getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')' );
+		beforePlaceholder.appendTo(buf);
+		if ( encloseInParens ) {
+			buf.append( '(' );
+		}
+
+		if (actuallyReplace)
+			buf.append(replacement);
+		else
+			placeholder.appendTo(buf);
+
+		if ( encloseInParens ) {
+			buf.append( ')' );
+		}
+		StringBuilder buf2 = StringBuilderCache.get();
+		try {
+			replace(
+					afterPlaceholder,
+					placeholder,
+					replacement,
+					wholeWords,
+					encloseInParensIfNecessary,
+					buf2
+			);
+			buf.append(buf2);
+		} finally {
+			StringBuilderCache.release(buf2);
+		}
+	}
+
+	public static char getLastNonWhitespaceCharacter(CharSequence str) {
 		if ( str != null && str.length() > 0 ) {
 			for ( int i = str.length() - 1 ; i >= 0 ; i-- ) {
 				char ch = str.charAt( i );
@@ -291,7 +361,7 @@ public final class StringHelper {
 		return '\0';
 	}
 
-	public static char getFirstNonWhitespaceCharacter(String str) {
+	public static char getFirstNonWhitespaceCharacter(CharSequence str) {
 		if ( str != null && str.length() > 0 ) {
 			for ( int i = 0 ; i < str.length() ; i++ ) {
 				char ch = str.charAt( i );
@@ -611,8 +681,8 @@ public final class StringHelper {
 	private static String generateAliasRoot(String description) {
 		String result = truncate( unqualifyEntityName(description), ALIAS_TRUNCATE_LENGTH )
 				.toLowerCase()
-		        .replace( '/', '_' ) // entityNames may now include slashes for the representations
-				.replace( '$', '_' ); //classname may be an inner class
+		        .replace('/', '_') // entityNames may now include slashes for the representations
+				.replace('$', '_'); //classname may be an inner class
 		result = cleanAlias( result );
 		if ( Character.isDigit( result.charAt(result.length()-1) ) ) {
 			return result + "x"; //ick!
@@ -652,11 +722,11 @@ public final class StringHelper {
 		}
 		return result;
 	}
-	
+
 	public static String toUpperCase(String str) {
 		return str==null ? null : str.toUpperCase();
 	}
-	
+
 	public static String toLowerCase(String str) {
 		return str==null ? null : str.toLowerCase();
 	}

@@ -742,6 +742,7 @@ public abstract class AbstractQueryImpl implements Query {
 				Map.Entry me = (Map.Entry) iter.next();
 				expandParameterList( query, (String) me.getKey(), (TypedValue) me.getValue(), namedParamsCopy );
 			}
+//			System.out.println("query: " + queryString + ";\nparams: " + namedParamsCopy + "\nresult: " + query.toString());
 			return query.toString();
 		}finally {
 			StringBuilderCache.release(query);
@@ -826,8 +827,8 @@ public abstract class AbstractQueryImpl implements Query {
 			return;
 		}
 
-		String beforePlaceholder = query.substring( 0, loc );
-		String afterPlaceholder =  query.substring( loc + placeholder.length() );
+		CustomCharSequence beforePlaceholder = new CustomCharSequence(query.substring( 0, loc ));
+		CustomCharSequence afterPlaceholder =  new CustomCharSequence(query.substring( loc + placeholder.length() ));
 
 		// check if placeholder is already immediately enclosed in parentheses
 		// (ignoring whitespace)
@@ -860,7 +861,7 @@ public abstract class AbstractQueryImpl implements Query {
 			StringHelper.replace(
 					beforePlaceholder,
 					afterPlaceholder,
-					placeholder,
+					new CustomCharSequence(placeholder),
 					list,
 					true,
 					true,
